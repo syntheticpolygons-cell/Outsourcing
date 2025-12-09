@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyntheticPolygons | 3D Outsourcing & Pipeline Solutions</title>
+    <style>
+        /* --- RESET & VARIABLES (Design from File 1) --- */
+        :root {
+            --bg-dark: #0f1115;
+            --bg-card: #181b21;
+            /* Using the Cyan Accent from the Design File */
+            --accent: #00d2ff; 
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { background-color: var(--bg-dark); color: var(--text-main); line-height: 1.6; }
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+        ul { list-style: none; }
+
+        /* --- UTILITIES --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Tech Buttons from Design File */
+        .btn { display: inline-block; padding: 12px 24px; border-radius: 2px; font-weight: 600; cursor: pointer; border: none; letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.9rem; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #00aaff); color: #000; }
+        .btn-primary:hover { opacity: 0.9; box-shadow: 0 0 15px rgba(0, 210, 255, 0.4); }
+        .btn-outline { border: 1px solid var(--text-muted); background: transparent; color: var(--text-main); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        .section-title { font-size: 2rem; margin-bottom: 10px; font-weight: 300; }
+        .section-subtitle { color: var(--text-muted); margin-bottom: 40px; display: block; border-left: 3px solid var(--accent); padding-left: 15px; }
+
+        /* --- NAVIGATION --- */
+        nav { background: rgba(24, 27, 33, 0.95); padding: 15px 0; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Logo Styling from Design File (Text Version) */
+        .logo-text { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; color: white; text-transform: uppercase; }
+        .logo-text span { color: var(--accent); font-weight: 300; }
+
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-links a:hover { color: var(--accent); }
+
+        /* --- HERO SECTION (With Grid Background from Design File) --- */
+        .hero { padding: 120px 0; text-align: center; background: radial-gradient(circle at center, #1f232b 0%, #0f1115 100%); position: relative; overflow: hidden; }
+        .hero::before {
+            content: "";
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+        .hero h1 { font-size: 3.8rem; margin-bottom: 20px; line-height: 1.1; font-weight: 800; }
+        .hero h1 span { color: var(--accent); }
+        .hero p { font-size: 1.25rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 35px; }
+        
+        /* --- SERVICES --- */
+        .services { padding: 80px 0; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .service-card { background: var(--bg-card); padding: 35px; border-radius: 4px; border: 1px solid #2a2e36; transition: 0.3s; }
+        .service-card:hover { border-color: var(--accent); box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .service-card h3 { margin-bottom: 15px; font-size: 1.4rem; color: white; }
+        .service-card p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* --- PROJECT SHOWCASE --- */
+        .projects { padding: 80px 0; background: #13161c; }
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .project-card { position: relative; overflow: hidden; border-radius: 4px; height: 250px; cursor: pointer; }
+        .project-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; opacity: 0.8; }
+        .project-card:hover img { transform: scale(1.05); opacity: 0.3; }
+        .project-info { position: absolute; bottom: 0; left: 0; padding: 25px; opacity: 0; transition: 0.3s; transform: translateY(10px); }
+        .project-card:hover .project-info { opacity: 1; transform: translateY(0); }
+        .project-tag { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+
+        /* --- EXTERNAL STORE --- */
+        .store { padding: 80px 0; border-top: 1px solid #222; }
+        .store-item { background: var(--bg-card); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; border: 1px solid #2a2e36; transition: 0.3s; }
+        .store-item:hover { border-color: #444; transform: translateY(-3px); }
+        .store-img { height: 200px; background: #222; position: relative; }
+        .store-img img { width: 100%; height: 100%; object-fit: cover; }
+        .store-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; font-size: 0.7rem; color: white; border-radius: 2px; }
+        .store-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .store-content h4 { font-size: 1.2rem; margin-bottom: 5px; }
+        .price { color: var(--accent); font-weight: bold; margin-bottom: 15px; display: block; font-size: 1.1rem; }
+        .store-btn { margin-top: auto; width: 100%; text-align: center; border: 1px solid #444; padding: 12px; border-radius: 2px; font-size: 0.9rem; font-weight: 600; background: #1f232b; }
+        .store-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        /* --- FOOTER --- */
+        footer { background: #08090b; padding: 60px 0; text-align: center; color: #555; font-size: 0.9rem; }
+        
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="container">
+            <div class="logo-text">Synthetic<span>Polygons</span></div>
+
+            <ul class="nav-links">
+                <li><a href="#work">Projects</a></li>
+                <li><a href="#services">Solutions</a></li>
+                <li><a href="#store">Store</a></li>
+                <li><a href="#contact" class="btn btn-primary">Hire Us</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Outsource your assets<br>with an optimized workflow</h1>
+            
+            <p>We provide high-fidelity 3D models and cost-effective technical solutions to match your stylized game art pipeline.</p>
+            
+            <div style="margin-top: 20px;">
+                <a href="#work" class="btn btn-primary">View Portfolio</a>
+                <a href="#store" class="btn btn-outline" style="margin-left: 10px;">Browse Store</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">Technical Solutions</h2>
+            <span class="section-subtitle">Bridging the gap between art and performance.</span>
+            
+            <div class="grid-3">
+                <div class="service-card">
+                    <h3>Asset Creation</h3>
+                    <p>Full-cycle production for characters, props, and environments. We deliver game-ready topology with PBR texturing tailored to your engine.</p>
+                </div>
+                <div class="service-card">
+                    <h3>Pipeline Optimization</h3>
+                    <p>We audit your current workflow to reduce draw calls and texture memory usage without sacrificing visual fidelity.</p>
+                </div>
+                <div class="service-card">
+                    <h3>Technical Art Support</h3>
+                    <p>Need custom shaders or rigging solutions? We fix broken pipelines and offer scripts to automate repetitive tasks.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="work" class="projects">
+        <div class="container">
+            <h2 class="section-title">Recent Projects</h2>
+            <span class="section-subtitle">Outsourced work and internal R&D.</span>
+            
+            <div class="project-grid">
+                <div class="project-card">
+                    <img src="https://placehold.co/600x400/222/FFF?text=Sci-Fi+Environment" alt="Project 1">
+                    <div class="project-info">
+                        <span class="project-tag">Environment Art</span>
+                        <h3>Sci-Fi Modular Kit</h3>
+                        <p>UE5 Real-time Render</p>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <img src="https://placehold.co/600x400/222/FFF?text=Character+Rig" alt="Project 2">
+                    <div class="project-info">
+                        <span class="project-tag">Rigging</span>
+                        <h3>FPS Character Rig</h3>
+                        <p>Technical Art / Animation</p>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <img src="https://placehold.co/600x400/222/FFF?text=Vehicle+Design" alt="Project 3">
+                    <div class="project-info">
+                        <span class="project-tag">Hard Surface</span>
+                        <h3>Post-Apo Vehicle</h3>
+                        <p>Game-Ready Model</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="store" class="store">
+        <div class="container">
+            <h2 class="section-title">The Asset Store</h2>
+            <span class="section-subtitle">Cost-effective models and tools available for instant download.</span>
+            
+            <div class="grid-3">
+                <div class="store-item">
+                    <div class="store-img">
+                        <img src="https://placehold.co/400x300/333/FFF?text=Greeble+Pack" alt="Product">
+                    </div>
+                    <div class="store-content">
+                        <h4>Mechanical Greeble Pack</h4>
+                        <span class="price">$15.00</span>
+                        <p style="font-size: 0.9rem; margin-bottom: 15px; color: #888;">200+ high-poly mechanical parts for kitbashing.</p>
+                        <a href="#" class="store-btn">Buy on ArtStation ↗</a>
+                    </div>
+                </div>
+
+                <div class="store-item">
+                    <div class="store-img">
+                        <img src="https://placehold.co/400x300/333/FFF?text=Python+Script" alt="Product">
+                    </div>
+                    <div class="store-content">
+                        <h4>Auto-UV Packer (Script)</h4>
+                        <span class="price">$5.00</span>
+                        <p style="font-size: 0.9rem; margin-bottom: 15px; color: #888;">Blender script to optimize UV space automatically.</p>
+                        <a href="#" class="store-btn">Buy on Gumroad ↗</a>
+                    </div>
+                </div>
+
+                <div class="store-item">
+                    <div class="store-img">
+                        <img src="https://placehold.co/400x300/333/FFF?text=Texture+Library" alt="Product">
+                    </div>
+                    <div class="store-content">
+                        <h4>Concrete Smart Materials</h4>
+                        <span class="price">$10.00</span>
+                        <p style="font-size: 0.9rem; margin-bottom: 15px; color: #888;">5 Smart Materials for Substance Painter.</p>
+                        <a href="#" class="store-btn">Buy on Unity Asset Store ↗</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 SyntheticPolygons Outsourcing. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
