@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyntheticPolygons | 3D Art & Game Dev Studio</title>
+    
+    <link rel="icon" href="logo/logo.png" type="image/png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: rgba(10, 10, 10, 0.85);
+            --neon-cyan: #00f3ff;
+            --neon-purple: #bc13fe;
+            --text-main: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent scrolling on the viewer */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Overlay */
+        .ui-layer {
+            position: absolute;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to 3D scene where empty */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+        }
+
+        /* Header / Navigation */
+        .header {
+            pointer-events: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        .model-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-panel);
+            padding: 0.5rem 1rem;
+            border: 1px solid #333;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+        }
+
+        #model-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            pointer-events: auto;
+            align-self: flex-end;
+            background: var(--bg-panel);
+            padding: 1.5rem;
+            border-left: 2px solid var(--neon-purple);
+            border-radius: 4px;
+            backdrop-filter: blur(10px);
+            width: 250px;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            color: #aaa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--neon-purple);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 1px solid var(--neon-purple);
+            color: var(--neon-purple);
+            padding: 0.5rem 1rem;
+            width: 100%;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(188, 19, 254, 0.1);
+            box-shadow: 0 0 10px rgba(188, 19, 254, 0.3);
+        }
+
+        .toggle-btn.active {
+            background: var(--neon-purple);
+            color: white;
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--neon-cyan);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        #loader.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Hero placeholder for fade effect logic */
+        #hero {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100px; 
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="active">INITIALIZING ENGINE...</div>
+    
+    <div id="hero"></div>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        <div class="header">
+            <h1>Synthetic Polygons</h1>
+            <div class="model-nav">
+                <button id="prev-btn" class="nav-btn">&lt;</button>
+                <span id="model-label">LOADING...</span>
+                <button id="next-btn" class="nav-btn">&gt;</button>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="control-group">
+                <label>Light Angle</label>
+                <input type="range" id="light-angle" min="0" max="6.28" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label>Light Intensity</label>
+                <input type="range" id="light-intensity" min="0" max="5" step="0.1" value="2">
+            </div>
+            
+            <button id="wireframe-btn" class="toggle-btn">Toggle Wireframe</button>
+            
+            <button id="frame-btn" class="toggle-btn" style="margin-top: 10px; border-color: var(--neon-cyan); color: var(--neon-cyan);">Frame Model</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const modelFiles = [
+            "1_Car1.glb", 
+            "2_ScifiWoman1.glb",
+            "3_ScifiWoman2.glb",
+            "4_Car2.glb",
+            "5_.glb",
+            "6_.glb",
+            "7_Car7.glb"
+        ];
+        
+        let currentIndex = 0;
+        let scene, camera, renderer, controls, loader;
+        let currentModel = null;
+        let dirLight = null;
+        let isWireframeOn = false;
+
+        const container = document.getElementById('canvas-container');
+        const label = document.getElementById('model-label');
+        const loadingOverlay = document.getElementById('loader');
+        const angleSlider = document.getElementById('light-angle');
+        const intensitySlider = document.getElementById('light-intensity');
+        const wireframeBtn = document.getElementById('wireframe-btn');
+        const frameBtn = document.getElementById('frame-btn'); // Reference to new button
+
+        // Hero Fade Effect Logic
+        const heroSection = document.getElementById('hero');
+        window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY;
+            const heroHeight = heroSection.offsetHeight;
+            let opacity = 1 - (scrollPosition / (heroHeight * 0.8));
+            if (opacity < 0) opacity = 0;
+            heroSection.style.opacity = opacity;
+        });
+
+        init();
+        animate();
+
+        if(modelFiles.length > 0) {
+            loadModel(currentIndex);
+        } else {
+            loadFallback("No Models Configured");
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111111);
+            
+            const gridHelper = new THREE.GridHelper(10, 20, 0x00f3ff, 0x333333);
+            scene.add(gridHelper);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(3, 2, 5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambientLight);
+            
+            dirLight = new THREE.DirectionalLight(0xffffff, 2);
+            dirLight.position.set(5, 5, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const neonLight = new THREE.PointLight(0xbc13fe, 2, 10);
+            neonLight.position.set(-2, 3, -2);
+            scene.add(neonLight);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            loader = new GLTFLoader();
+
+            window.addEventListener('resize', onWindowResize);
+
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                currentIndex = (currentIndex > 0) ? currentIndex - 1 : modelFiles.length - 1;
+                loadModel(currentIndex);
+            });
+            document.getElementById('next-btn').addEventListener('click', () => {
+                currentIndex = (currentIndex < modelFiles.length - 1) ? currentIndex + 1 : 0;
+                loadModel(currentIndex);
+            });
+
+            angleSlider.addEventListener('input', updateLight);
+            intensitySlider.addEventListener('input', updateLight);
+
+            wireframeBtn.addEventListener('click', () => {
+                isWireframeOn = !isWireframeOn;
+                toggleWireframe(isWireframeOn);
+                if(isWireframeOn) wireframeBtn.classList.add('active');
+                else wireframeBtn.classList.remove('active');
+            });
+
+            // New Frame Button Event
+            if(frameBtn) {
+                frameBtn.addEventListener('click', () => {
+                    frameModel();
+                });
+            }
+        }
+
+        function updateLight() {
+            if(!dirLight) return;
+            dirLight.intensity = parseFloat(intensitySlider.value);
+            const angle = parseFloat(angleSlider.value);
+            const radius = 8;
+            dirLight.position.x = Math.sin(angle) * radius;
+            dirLight.position.z = Math.cos(angle) * radius;
+            dirLight.position.y = 5; 
+        }
+
+        // UPDATED WIREFRAME LOGIC
+        function toggleWireframe(enable) {
+            if (!currentModel) return;
+
+            if (enable) {
+                currentModel.traverse((child) => {
+                    if (child.isMesh && child.name !== 'wireframe-overlay') {
+                        // 1. Set Model Opacity to 75%
+                        if(child.material) {
+                            child.material.transparent = true;
+                            child.material.opacity = 0.75;
+                            child.material.needsUpdate = true;
+                        }
+
+                        // 2. Add Wireframe at 100% Opacity
+                        const wireframeGeometry = new THREE.WireframeGeometry(child.geometry);
+                        const wireframeMaterial = new THREE.LineBasicMaterial({ 
+                            color: 0x00f3ff,
+                            transparent: true,
+                            opacity: 1.0 // Full opacity for wireframe
+                        });
+                        const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+                        wireframe.name = 'wireframe-overlay';
+                        // Scale slightly to prevent z-fighting
+                        wireframe.scale.setScalar(1.001); 
+                        child.add(wireframe);
+                    }
+                });
+            } else {
+                currentModel.traverse((child) => {
+                    if (child.isMesh) {
+                        // 1. Reset Model to Solid (100% Opacity)
+                        if(child.material) {
+                            child.material.opacity = 1.0;
+                            child.material.transparent = false;
+                            child.material.needsUpdate = true;
+                        }
+
+                        // 2. Remove Wireframe
+                        const wireframe = child.getObjectByName('wireframe-overlay');
+                        if (wireframe) {
+                            child.remove(wireframe);
+                            wireframe.geometry.dispose();
+                            wireframe.material.dispose();
+                        }
+                    }
+                });
+            }
+        }
+
+        // NEW FRAME MODEL FUNCTION
+        function frameModel() {
+            if (!currentModel) return;
+
+            // 1. Get the bounding box
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            // 2. Determine largest dimension
+            const maxDim = Math.max(size.x, size.y, size.z);
+            
+            // 3. Calculate distance needed (based on FOV)
+            const fov = camera.fov * (Math.PI / 180);
+            let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+            
+            // 4. Add breathing room (1.5x)
+            cameraZ *= 1.5; 
+
+            // 5. Position camera
+            const direction = new THREE.Vector3().subVectors(camera.position, center).normalize();
+            const newPos = direction.multiplyScalar(cameraZ).add(center);
+            
+            // 6. Apply
+            camera.position.copy(newPos);
+            camera.lookAt(center);
+            
+            // Update control target to center of model
+            controls.target.copy(center);
+            controls.update();
+        }
+
+        function loadModel(index) {
+            const filename = modelFiles[index];
+            const path = `./models/${filename}`;
+            
+            label.textContent = filename.replace(/_/g, ' ').replace('.glb', '').toUpperCase();
+            loadingOverlay.classList.add('active');
+
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+                // Reset wireframe state
+                isWireframeOn = false; 
+                wireframeBtn.classList.remove('active');
+            }
+
+            loader.load(
+                path,
+                (gltf) => {
+                    currentModel = gltf.scene;
+                    
+                    // Center geometric origin
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    currentModel.position.x += (currentModel.position.x - center.x);
+                    currentModel.position.y += (currentModel.position.y - center.y);
+                    currentModel.position.z += (currentModel.position.z - center.z);
+                    currentModel.position.y += size.y / 2;
+                    
+                    scene.add(currentModel);
+
+                    // AUTO-FRAME: Automatically fit the model in view
+                    frameModel();
+
+                    loadingOverlay.classList.remove('active');
+                },
+                undefined,
+                (error) => {
+                    console.error('An error happened loading the GLB:', error);
+                    loadFallback("File Not Found / Load Error");
+                }
+            );
+        }
+
+        function loadFallback(message) {
+            loadingOverlay.classList.remove('active');
+            label.textContent = message;
+            if (currentModel) scene.remove(currentModel);
+
+            const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x00f3ff, 
+                wireframe: true,
+                emissive: 0x00f3ff,
+                emissiveIntensity: 0.5
+            });
+            currentModel = new THREE.Mesh(geometry, material);
+            currentModel.position.y = 1.5;
+            scene.add(currentModel);
+            
+            // Frame the fallback too
+            frameModel();
+        }
+
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
